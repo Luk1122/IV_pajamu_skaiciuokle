@@ -7,17 +7,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 import os
 import seaborn as sns
-#vietoj ??? įrašyti sukompiliuoto UI failo kelią
 from GUI.Ui_veikla_gui import Ui_MainWindow
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.use('Qt5Agg') # matplpotlib liepiam naudoti pyqt5 framework'a
+matplotlib.use('Qt5Agg') 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-
-# 12-13 el: importuojame bibliotekas kurios mokes pyqt lange atvaizduti grafika
-
-# GPM, VSD, PSD mokesciai
 
 
 class Window(QtWidgets.QMainWindow):
@@ -29,34 +24,13 @@ class Window(QtWidgets.QMainWindow):
         self.langas.actionClose.triggered.connect(self.close_function)
         self.langas.write_data_button.clicked.connect(self.write_button_function)
         self.langas.trinti_button.clicked.connect(self.trinti_button_function)
-        self.langas.duomenys_button.clicked.connect(self.simplot)
         self.langas.skaiciuoti_button.clicked.connect(self.skaiciuoti_button_function)
         # iškviečiam reikiamus modulius
         # susikuriam vartotojo įvesties lentelę
         self.set_data_table()
         self.load_data_db()
-        # apsirasom matplotlibo grafika
-        self.fig, self.ax = plt.subplots()
-        self.plotcanvas = FigureCanvas(self.fig) # remelis su grafiku
-        grid = QtWidgets.QGridLayout() # veikia resize
-        navigacija = NavigationToolbar(self.plotcanvas)
-        grid.addWidget(navigacija)
-        grid.addWidget(self.plotcanvas)
-        self.langas.grafikas.setLayout(grid)
-        self.plotcanvas.draw()
         pass
         
-    
-    def simplot(self):
-        y = np.random.randint(1, 11, 10)
-        x = np.arange(1, 11)
-        
-        self.ax.clear() # isvalome ankstesnius grafikus, jei tokiu buvo
-        # self.ax.plot(x, y, label="svabus grafikas")
-        sns.lineplot(x=x, y=y, label='seaborn', ax=self.ax)
-        self.ax.legend(loc='best')
-        self.plotcanvas.draw()
-        pass
     
     
     def close_function(self):
@@ -71,18 +45,6 @@ class Window(QtWidgets.QMainWindow):
         except ValueError:
             return False
         
-    # # # Funkcija patikrinti ar nesumaišyti datos stulpeliai
-    # def validate_dates(self, date_from, date_to, date_format="%Y-%m-%d"):
-    #     # paverčiame į datetime objektus
-    #     # date_from = str(date_from)
-    #     # date_to = str(date_to)
-    #     date_from_obj = datetime.strptime(date_from, date_format)
-    #     date_to_obj = datetime.strptime(date_to, date_format)
-
-    #     if date_from_obj <= date_to_obj:
-    #         return True
-    #     else:
-    #         return False
     
     
     def write_button_function(self):
@@ -138,24 +100,6 @@ class Window(QtWidgets.QMainWindow):
             self.langas.write_data_label.setText(t)
             return
         
-        # # patikrina ar datos įvestos reikiamu formatu
-        # if self.is_valid_date(duomenys['nuo_kada']) is False:
-        #     t = 'Neįrašyta. Stulpelyje "nuo_kada" datą reikia įvesti formatu "yyyy-mm-dd"'
-        #     self.langas.write_data_label.setText(t)
-        #     return
-        
-        # if self.is_valid_date(duomenys['iki_kada']) is False:
-        #     t = 'Neįrašyta. Stulpelyje "iki_kada" datą reikia įvesti formatu "yyyy-mm-dd"'
-        #     self.langas.write_data_label.setText(t)
-        #     return
-        
-        # if  self.validate_dates(duomenys['nuo_kada'], duomenys['iki_kada']) is False:
-        #     t = 'Neįrašyta. Patikrinkite ar data "nuo_kada" nesumaišyta su data "iki_kada".'
-        #     self.langas.write_data_label.setText(t)
-        #     return
-        
-
-
         
         try:
             # įrašom į lentelę
@@ -164,13 +108,7 @@ class Window(QtWidgets.QMainWindow):
             q = ['?' for i in range(0, len(data))]
             q_ = ', '.join(q)
             r_ = sql.format(n=q_)
-            # print(r_)
             C.executemany(r_, [tuple(data)])
-            # C.executemany(r_, tuple(data))
-
-            # sql = '''insert into saskaitos
-            # values (?,?,?,?,?,?,?)'''
-            # C.executemany(sql, [tuple(data)])
             db.commit()
             db.close()
             
@@ -194,14 +132,9 @@ class Window(QtWidgets.QMainWindow):
         finally:
         #     # išvalom lentelę ir vėl sukuriam lentelę
             db.close()
-        #     self.langas.tableWidget.clear()
-        #     self.set_data_table()
-        #     self.load_data_db()
-        
-                
 
         
-        
+       
     def set_data_table(self):
         stulpeliai = ['Nr', 'Data', 'Pirkėjas', 'Paslauga', 'Suma']
         self.langas.tableWidget.clear()
@@ -232,7 +165,6 @@ class Window(QtWidgets.QMainWindow):
         s = C.execute(sql)
         ans = C.fetchall()
         
-        names = list(zip(*s.description))[0]
         
         ans = list(map(list, zip(*ans)))
         self.langas.lentele2.clear()
@@ -256,9 +188,7 @@ class Window(QtWidgets.QMainWindow):
     
         pass
     
-    # delete from saskaitos where Nr = <Numeris iš pasirinktos eilutės>
-    # delete from saskaitos where Nr = "text"
-    # delete from saskaitos where Nr = 5 # siuo atveju trins saskaitas kurios nr 5
+    
     def trinti_button_function(self):
         row = self.langas.lentele2.currentRow()
         item = self.langas.lentele2.item(row, 0)
@@ -314,16 +244,6 @@ class Window(QtWidgets.QMainWindow):
 
             # skaičiuojam valstybinį socialinį draudimą
             # vdu_2025 = 2108.88
-            # vdu_2024 = 1902.7
-            # vdu_2023 = 1684.9
-            # if metai =='2025':
-            #     vdu = 2108.88
-            # elif metai =='2024':
-            #     vdu = 1902.7
-            # elif metai == '2023':
-            #     vdu = 1684.9
-            
-
             # lubos = vdu * 43
             lubos = 5710.76 # vsd lubos kai  pajamos virsija 43 vdu
 
